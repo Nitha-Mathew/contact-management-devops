@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DevOpsAI Users</title>
+</head>
+<body>
+
+    <h1>DevOpsAI Users</h1>
+
+    <form method="POST" action="/add-user">
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <button type="submit">Add User</button>
+    </form>
+
+    <h2>Users</h2>
+
+    {% for user in users %}
+        <p>{{ user[0] }} - {{ user[1] }} - {{ user[2] }}</p>
+    {% endfor %}
+
+</body>
+</html>
