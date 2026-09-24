@@ -10,7 +10,7 @@ def get_connection():
 
     connection = pyodbc.connect(
         "DRIVER={ODBC Driver 18 for SQL Server};"
-        "SERVER=host.docker.internal,1433;"
+        "SERVER=host.docker.internal,1433;"  #special hostname that allows Docker container to reach the Windows host
         "DATABASE=DevOpsAI;"
         "UID=devops_app;"
         "PWD=Nitha@12345;"
