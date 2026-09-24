@@ -3,15 +3,21 @@ import pyodbc
 
 app = Flask(__name__)
 
-
 def get_connection():
-    return pyodbc.connect(
+    print("=== CONNECT FUNCTION CALLED ===", flush=True)
+
+    print("=== ABOUT TO CONNECT TO SQL SERVER ===", flush=True)
+
+    connection = pyodbc.connect(
         "DRIVER={ODBC Driver 18 for SQL Server};"
-        "SERVER=localhost;"
+        "SERVER=host.docker.internal,1433;"
         "DATABASE=DevOpsAI;"
-        "Trusted_Connection=yes;"
+        "UID=devops_app;"
+        "PWD=Nitha@12345;"
         "TrustServerCertificate=yes;"
     )
+
+    return connection
 
 
 @app.route("/")
@@ -99,5 +105,5 @@ if __name__ == "__main__":
 
     print("MY APP.PY IS RUNNING")
     print("STARTING ON PORT 5001")
-    app.run(debug=True, port=5001)
+    app.run(debug=True,host="0.0.0.0", port=5001)
 
