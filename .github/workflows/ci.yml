@@ -39,10 +39,17 @@ jobs:
             echo "Waiting..."
             sleep 2
           done
-          
-      - name: Find SQL Server container
+
+      - name: Initialize SQL Server
         run: |
-          docker ps
+            SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
+            docker exec "$SQL_CONTAINER" \
+              /opt/mssql-tools18/bin/sqlcmd \
+              -S localhost \
+              -U sa \
+              -P 'Nithatemp@1234' \
+              -C \
+              -i /dev/stdin < ci/init.sql
 
       - name: Install dependencies
         run: |
