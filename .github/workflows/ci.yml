@@ -21,6 +21,9 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Build test Docker image
+        run: docker build -t flask-test .
+
       - name: Run tests
         run: docker run --rm flask-test pytest tests/test_app.py
 
