@@ -69,17 +69,16 @@ jobs:
       - name: Build test Docker image
         run: docker build -t flask-test .
 
-      - name: Check CI environment
+      - name: Test pyodbc connection
         run: |
           docker run --rm \
-            --add-host=host.docker.internal:host-gateway \
-            -e DB_SERVER=host.docker.internal,1433 \
-            -e DB_NAME=DevOpsAI \
-            -e DB_USER=devops_app \
-            -e DB_PASSWORD='NithaCIApp@1234' \
-            flask-test \
-            python -c "import os; print('SERVER:', os.getenv('DB_SERVER')); print('DB:', os.getenv('DB_NAME')); print('USER:', os.getenv('DB_USER')); print('PASSWORD SET:', bool(os.getenv('DB_PASSWORD')))"
-        
+          --add-host=host.docker.internal:host-gateway \
+          -e DB_SERVER=host.docker.internal,1433 \
+          -e DB_NAME=DevOpsAI \
+          -e DB_USER=devops_app \
+          -e DB_PASSWORD='NithaCIApp@1234' \
+          flask-test \
+          python -c "import os, pyodbc; print('Connecting...'); conn=pyodbc.connect(f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={os.getenv(\"DB_SERVER\")};DATABASE={os.getenv(\"DB_NAME\")};UID={os.getenv(\"DB_USER\")};PWD={os.getenv(\"DB_PASSWORD\")};TrustServerCertificate=yes;'); print('PYODBC CONNECTION SUCCESS')"
 
       - name: Run tests
         run: |
