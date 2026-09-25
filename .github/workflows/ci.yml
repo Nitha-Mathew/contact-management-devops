@@ -69,6 +69,17 @@ jobs:
       - name: Build test Docker image
         run: docker build -t flask-test .
 
+      - name: Check CI environment
+        run: |
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -e DB_SERVER=host.docker.internal,1433 \
+            -e DB_NAME=DevOpsAI \
+            -e DB_USER=devops_app \
+            -e DB_PASSWORD='NitaCIApp@1234' \
+            flask-test \
+            python -c "import os; from dotenv import load_dotenv; load_dotenv(); print('SERVER:', os.getenv('DB_SERVER')); print('DB:', os.getenv('DB_NAME')); print('USER:', os.getenv('DB_USER')); print('PASSWORD SET:', bool(os.getenv('DB_PASSWORD')))"
+
       - name: Run tests
         run: |
           docker run --rm \
