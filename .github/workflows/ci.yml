@@ -39,18 +39,22 @@ jobs:
             echo "Waiting..."
             sleep 2
           done
+          
+      - name: Install sqlcmd
+        run: |
+            curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+            curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+            sudo apt-get update
+            sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+
       - name: Initialize SQL Server
         run: |
-          docker run --rm \
-            --network host \
-            -v "${{ github.workspace }}/ci/init.sql:/init.sql" \
-            mcr.microsoft.com/mssql-tools18 \
             /opt/mssql-tools18/bin/sqlcmd \
-            -S localhost,1433 \
-            -U sa \
-            -P 'Nithatemp@1234' \
-            -C \
-            -i /init.sql
+              -S localhost,1433 \
+              -U sa \
+              -P 'Nithatemp@1234' \
+              -C \
+              -i ci/init.sql
 
       - name: Install dependencies
         run: |
