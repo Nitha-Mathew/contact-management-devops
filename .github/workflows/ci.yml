@@ -5,9 +5,19 @@ on:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: 'Nithatemp@1234'
+        ports:
+          - 1433:1433
 
     steps:
       - name: Checkout code
@@ -18,6 +28,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Check SQL Server
+        run: |
+          echo "Checking SQL Server..."
+          nc -zc localhost 1433
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
@@ -27,4 +42,3 @@ jobs:
 
       - name: Run tests
         run: docker run --rm flask-test python -m pytest tests/test_app.py
-
