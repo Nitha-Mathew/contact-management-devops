@@ -59,4 +59,12 @@ jobs:
         run: docker build -t flask-test .
 
       - name: Run tests
-        run: docker run --rm --add-host=host.docker.internal:host-gateway flask-test python -m pytest tests/test_app.py
+        run: |
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -e DB_SERVER=host.docker.internal,1433 \
+            -e DB_NAME=DevOpsAI \
+            -e DB_USER=devops_app \
+            -e DB_PASSWORD='NithaCIApp@1234' \
+            flask-test \
+            python -m pytest tests/test_app.py
