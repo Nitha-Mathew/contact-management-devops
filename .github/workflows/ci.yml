@@ -40,18 +40,9 @@ jobs:
             sleep 2
           done
           
-      - name: Initialize SQL Server
+      - name: Find SQL Server container
         run: |
-          docker run --rm \
-            --network host \
-            -v "${{ github.workspace }}/ci/init.sql:/init.sql" \
-            mcr.microsoft.com/mssql-tools \
-            /opt/mssql-tools/bin/sqlcmd \
-            -S localhost,1433 \
-            -U sa \
-            -P 'Nithatemp@1234' \
-            -C \
-            -i /init.sql
+          docker ps
 
       - name: Install dependencies
         run: |

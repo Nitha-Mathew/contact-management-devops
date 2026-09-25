@@ -1,0 +1,22 @@
+CREATE DATABASE DevOpsAI;
+GO
+
+USE DevOpsAI;
+GO
+
+CREATE LOGIN devops_app
+WITH PASSWORD = 'NithaCIApp@1234';
+GO
+
+CREATE USER devops_app FOR LOGIN devops_app;
+GO
+
+ALTER ROLE db_owner ADD MEMBER devops_app;
+GO
+
+CREATE TABLE Users (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(255) NOT NULL
+);
+GO
