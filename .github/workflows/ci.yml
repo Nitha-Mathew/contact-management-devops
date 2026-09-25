@@ -30,8 +30,15 @@ jobs:
 
       - name: Check SQL Server
         run: |
-          echo "Checking SQL Server..."
-          timeout 5 bash -c '</dev/tcp/localhost/1433' && echo "Port 1433 is open" || echo "Port 1433 is not reachable"
+          echo "Waiting for SQL Server..."
+          for i in {1..30}; do
+            if timeout 2 bash -c '</dev/tcp/localhost/1433' 2>/dev/null; then
+              echo "SQL Server port is ready."
+              break
+            fi
+            echo "Waiting..."
+            sleep 2
+          done
 
       - name: Install dependencies
         run: |
