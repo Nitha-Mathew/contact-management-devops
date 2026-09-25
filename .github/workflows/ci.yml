@@ -42,14 +42,14 @@ jobs:
 
       - name: Initialize SQL Server
         run: |
-            SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
-            docker exec "$SQL_CONTAINER" \
-              /opt/mssql-tools18/bin/sqlcmd \
-              -S localhost \
-              -U sa \
-              -P 'Nithatemp@1234' \
-              -C \
-              -i /dev/stdin < ci/init.sql
+          SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
+          docker exec -i "$SQL_CONTAINER" \
+            /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost \
+            -U sa \
+            -P 'Nithatemp@1234' \
+            -C \
+            -i /dev/stdin < ci/init.sql
 
       - name: Install dependencies
         run: |
