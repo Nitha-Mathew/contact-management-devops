@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Check SQL Server
+      - name: Wait for SQL Server
         run: |
           echo "Waiting for SQL Server..."
           for i in {1..30}; do
@@ -39,6 +39,18 @@ jobs:
             echo "Waiting..."
             sleep 2
           done
+      - name: Initialize SQL Server
+        run: |
+          docker run --rm \
+            --network host \
+            -v "${{ github.workspace }}/ci/init.sql:/init.sql" \
+            mcr.microsoft.com/mssql-tools18 \
+            /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost,1433 \
+            -U sa \
+            -P 'Nithatemp@1234' \
+            -C \
+            -i /init.sql
 
       - name: Install dependencies
         run: |
