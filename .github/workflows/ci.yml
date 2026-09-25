@@ -26,5 +26,5 @@ jobs:
         run: docker build -t flask-test .
 
       - name: Run tests
-        run: docker run --rm flask-test pytest tests/test_app.py
+        run: docker run --rm flask-test python -m pytest tests/test_app.py
 
