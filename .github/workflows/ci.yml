@@ -31,7 +31,7 @@ jobs:
       - name: Check SQL Server
         run: |
           echo "Checking SQL Server..."
-          nc -zc localhost 1433
+          timeout 5 bash -c '</dev/tcp/localhost/1433' && echo "Port 1433 is open" || echo "Port 1433 is not reachable"
 
       - name: Install dependencies
         run: |
