@@ -118,7 +118,11 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build test Docker image
-        run: docker build -t flask-test .
+        run: docker build --no-cache -t flask-test .
+
+      - name: Verify Python dependencies in image
+        run: |
+          docker run --rm flask-test python -c "import dotenv; print('python-dotenv is installed')"
 
       - name: Check CI environment
         run: |
