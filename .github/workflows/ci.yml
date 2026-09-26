@@ -99,6 +99,19 @@ jobs:
             -C \
             -Q "SELECT SYSTEM_USER, DB_NAME();"
 
+      - name: Test devops_app login
+        run: |
+          SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
+
+          docker exec "$SQL_CONTAINER" \
+            /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost \
+            -U devops_app \
+            -P 'NithaCIApp@1234' \
+            -C \
+            -d DevOpsAI \
+            -Q "SELECT DB_NAME();"
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
