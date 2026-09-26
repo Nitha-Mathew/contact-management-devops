@@ -165,3 +165,15 @@ jobs:
             -e DB_PASSWORD="$DB_PASSWORD" \
             flask-test \
             python -m pytest tests/test_app.py
+          
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Tag Docker image
+        run: |
+          docker tag flask-test ghcr.io/nitha-mathew/contact-management-devops:latest
+
+      - name: Push Docker image to GHCR
+        run: |
+          docker push ghcr.io/nitha-mathew/contact-management-devops:latest
