@@ -62,6 +62,31 @@ jobs:
             -C \
             -i /dev/stdin < ci/init.sql
 
+      - name: Verify CI database login
+        run: |
+          SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
+
+          docker exec "$SQL_CONTAINER" \
+          /opt/mssql-tools18/bin/sqlcmd \
+          -S localhost \
+          -U sa \
+          -P 'Nithatemp@1234' \
+          -C \
+          -Q "SELECT name FROM sys.sql_logins WHERE name = 'devops_app';"
+          
+      - name: Verify database user
+        run: |
+          SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
+
+          docker exec "$SQL_CONTAINER" \
+          /opt/mssql-tools18/bin/sqlcmd \
+          -S localhost \
+          -U sa \
+          -P 'Nithatemp@1234' \
+          -C \
+          -d DevOpsAI \
+          -Q "SELECT name FROM sys.database_principals WHERE name = 'devops_app';"
+
       - name: Verify devops_app login
         run: |
           SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
