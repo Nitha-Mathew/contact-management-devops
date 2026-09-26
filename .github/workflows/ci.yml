@@ -10,12 +10,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      MSSQL_SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
     services:
       sqlserver:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
           ACCEPT_EULA: Y
-          MSSQL_SA_PASSWORD: 'Nithatemp@1234'
+          MSSQL_SA_PASSWORD: ${{secrets.MSSQL_SA_PASSWORD}}
         ports:
           - 1433:1433
 
@@ -39,7 +43,7 @@ jobs:
               /opt/mssql-tools18/bin/sqlcmd \
               -S localhost \
               -U sa \
-              -P 'Nithatemp@1234' \
+              -P "$MSSQL_SA_PASSWORD" \
               -C \
               -Q "SELECT 1" > /dev/null 2>&1
             then
@@ -53,14 +57,19 @@ jobs:
 
       - name: Initialize SQL Server
         run: |
+          sed "s|APP_PASSWORD_PLACEHOLDER|$DB_PASSWORD|g" ci/init.sql > /tmp/init.sql
+
           SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
-          docker exec -i "$SQL_CONTAINER" \
+
+          docker cp /tmp/init.sql "$SQL_CONTAINER:/tmp/init.sql"
+
+          docker exec "$SQL_CONTAINER" \
             /opt/mssql-tools18/bin/sqlcmd \
             -S localhost \
             -U sa \
-            -P 'Nithatemp@1234' \
+            -P "$MSSQL_SA_PASSWORD" \
             -C \
-            -i /dev/stdin < ci/init.sql
+            -i /tmp/init.sql
 
       - name: Verify CI database login
         run: |
@@ -70,7 +79,7 @@ jobs:
           /opt/mssql-tools18/bin/sqlcmd \
           -S localhost \
           -U sa \
-          -P 'Nithatemp@1234' \
+          -P "$MSSQL_SA_PASSWORD"  \
           -C \
           -Q "SELECT name FROM sys.sql_logins WHERE name = 'devops_app';"
           
@@ -82,7 +91,7 @@ jobs:
           /opt/mssql-tools18/bin/sqlcmd \
           -S localhost \
           -U sa \
-          -P 'Nithatemp@1234' \
+          -P "$MSSQL_SA_PASSWORD"  \
           -C \
           -d DevOpsAI \
           -Q "SELECT name FROM sys.database_principals WHERE name = 'devops_app';"
@@ -94,7 +103,7 @@ jobs:
           /opt/mssql-tools18/bin/sqlcmd \
             -S localhost \
             -U devops_app \
-            -P 'NithaCIApp@1234' \
+            -P "$DB_PASSWORD"\
             -d DevOpsAI \
             -C \
             -Q "SELECT SYSTEM_USER, DB_NAME();"
@@ -107,7 +116,7 @@ jobs:
             /opt/mssql-tools18/bin/sqlcmd \
             -S localhost \
             -U devops_app \
-            -P 'NithaCIApp@1234' \
+            -P "$DB_PASSWORD" \
             -C \
             -d DevOpsAI \
             -Q "SELECT DB_NAME();"
@@ -131,7 +140,7 @@ jobs:
             -e DB_SERVER=host.docker.internal,1433 \
             -e DB_NAME=DevOpsAI \
             -e DB_USER=devops_app \
-            -e DB_PASSWORD='NithaCIApp@1234' \
+            -e DB_PASSWORD="$DB_PASSWORD" \
             flask-test \
             python -c "import os; print('SERVER=', os.getenv('DB_SERVER')); print('DB=', os.getenv('DB_NAME')); print('USER=', os.getenv('DB_USER')); print('PASSWORD SET=', bool(os.getenv('DB_PASSWORD')))"
 
@@ -142,7 +151,7 @@ jobs:
           -e DB_SERVER=host.docker.internal,1433 \
           -e DB_NAME=DevOpsAI \
           -e DB_USER=devops_app \
-          -e DB_PASSWORD='NithaCIApp@1234' \
+          -e DB_PASSWORD="$DB_PASSWORD" \
           flask-test \
           python -c "import os, pyodbc; print('Connecting...'); conn=pyodbc.connect(f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={os.getenv(\"DB_SERVER\")};DATABASE={os.getenv(\"DB_NAME\")};UID={os.getenv(\"DB_USER\")};PWD={os.getenv(\"DB_PASSWORD\")};TrustServerCertificate=yes;'); print('PYODBC CONNECTION SUCCESS')"
 
@@ -153,6 +162,6 @@ jobs:
             -e DB_SERVER=host.docker.internal,1433 \
             -e DB_NAME=DevOpsAI \
             -e DB_USER=devops_app \
-            -e DB_PASSWORD='NithaCIApp@1234' \
+            -e DB_PASSWORD="$DB_PASSWORD" \
             flask-test \
             python -m pytest tests/test_app.py
