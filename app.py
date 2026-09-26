@@ -1,19 +1,28 @@
 from flask import Flask, render_template, request, redirect, jsonify
 import pyodbc
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 app = Flask(__name__)
 
 def get_connection():
     print("=== CONNECT FUNCTION CALLED ===", flush=True)
 
+    print("DB_SERVER =", os.getenv("DB_SERVER"), flush=True)
+    print("DB_NAME =", os.getenv("DB_NAME"), flush=True)
+    print("DB_USER =", os.getenv("DB_USER"), flush=True)
+    print("DB_PASSWORD SET =", bool(os.getenv("DB_PASSWORD")), flush=True)
+
     print("=== ABOUT TO CONNECT TO SQL SERVER ===", flush=True)
 
     connection = pyodbc.connect(
-        "DRIVER={ODBC Driver 18 for SQL Server};"
-        "SERVER=host.docker.internal,1433;"  #special hostname that allows Docker container to reach the Windows host
-        "DATABASE=DevOpsAI;"
-        "UID=devops_app;"
-        "PWD=Nitha@12345;"
+        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+        f"SERVER={os.getenv('DB_SERVER')};"
+        f"DATABASE={os.getenv('DB_NAME')};"
+        f"UID={os.getenv('DB_USER')};"
+        f"PWD={os.getenv('DB_PASSWORD')};"
         "TrustServerCertificate=yes;"
     )
 
