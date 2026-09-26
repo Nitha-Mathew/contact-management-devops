@@ -112,16 +112,6 @@ jobs:
             -d DevOpsAI \
             -Q "SELECT DB_NAME();"
 
-      - name: Check CI environment
-        run: |
-          docker run --rm \
-            --add-host=host.docker.internal:host-gateway \
-            -e DB_SERVER=host.docker.internal,1433 \
-            -e DB_NAME=DevOpsAI \
-            -e DB_USER=devops_app \
-            -e DB_PASSWORD='NithaCIApp@1234' \
-            flask-test \
-            python -c "import os; print('SERVER=', os.getenv('DB_SERVER')); print('DB=', os.getenv('DB_NAME')); print('USER=', os.getenv('DB_USER')); print('PASSWORD SET=', bool(os.getenv('DB_PASSWORD')))"
 
       - name: Install dependencies
         run: |
