@@ -1,10 +1,16 @@
-name: Flask CI
+name: Flask CI/CD
 
 on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   test:
@@ -19,25 +25,20 @@ jobs:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
           ACCEPT_EULA: Y
-          MSSQL_SA_PASSWORD: ${{secrets.MSSQL_SA_PASSWORD}}
+          MSSQL_SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD }}
         ports:
           - 1433:1433
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+        uses: actions/checkout@v6
 
       - name: Wait for SQL Server
         run: |
           SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
-          
+
           echo "Waiting for SQL Server to become ready..."
-          
+
           for i in {1..30}; do
             if docker exec "$SQL_CONTAINER" \
               /opt/mssql-tools18/bin/sqlcmd \
@@ -50,7 +51,7 @@ jobs:
               echo "SQL Server is ready!"
               break
             fi
-          
+
             echo "SQL Server is not ready yet. Waiting..."
             sleep 2
           done
@@ -76,64 +77,48 @@ jobs:
           SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
 
           docker exec "$SQL_CONTAINER" \
-          /opt/mssql-tools18/bin/sqlcmd \
-          -S localhost \
-          -U sa \
-          -P "$MSSQL_SA_PASSWORD"  \
-          -C \
-          -Q "SELECT name FROM sys.sql_logins WHERE name = 'devops_app';"
-          
-      - name: Verify database user
-        run: |
-          SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
-
-          docker exec "$SQL_CONTAINER" \
-          /opt/mssql-tools18/bin/sqlcmd \
-          -S localhost \
-          -U sa \
-          -P "$MSSQL_SA_PASSWORD"  \
-          -C \
-          -d DevOpsAI \
-          -Q "SELECT name FROM sys.database_principals WHERE name = 'devops_app';"
-
-      - name: Verify devops_app login
-        run: |
-          SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
-          docker exec -i "$SQL_CONTAINER" \
-          /opt/mssql-tools18/bin/sqlcmd \
+            /opt/mssql-tools18/bin/sqlcmd \
             -S localhost \
-            -U devops_app \
-            -P "$DB_PASSWORD"\
-            -d DevOpsAI \
+            -U sa \
+            -P "$MSSQL_SA_PASSWORD" \
             -C \
-            -Q "SELECT SYSTEM_USER, DB_NAME();"
+            -Q "SELECT name FROM sys.sql_logins WHERE name = 'devops_app';"
 
-      - name: Test devops_app login
+      - name: Verify database user
         run: |
           SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
 
           docker exec "$SQL_CONTAINER" \
             /opt/mssql-tools18/bin/sqlcmd \
             -S localhost \
-            -U devops_app \
-            -P "$DB_PASSWORD" \
+            -U sa \
+            -P "$MSSQL_SA_PASSWORD" \
             -C \
             -d DevOpsAI \
-            -Q "SELECT DB_NAME();"
+            -Q "SELECT name FROM sys.database_principals WHERE name = 'devops_app';"
 
-
-      - name: Install dependencies
+      - name: Verify devops_app login
         run: |
-          pip install -r requirements.txt
+          SQL_CONTAINER=$(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest")
 
-      - name: Build test Docker image
+          docker exec -i "$SQL_CONTAINER" \
+            /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost \
+            -U devops_app \
+            -P "$DB_PASSWORD" \
+            -d DevOpsAI \
+            -C \
+            -Q "SELECT SYSTEM_USER, DB_NAME();"
+
+      - name: Build Docker image
         run: docker build --no-cache -t flask-test .
 
       - name: Verify Python dependencies in image
         run: |
-          docker run --rm flask-test python -c "import dotenv; print('python-dotenv is installed')"
+          docker run --rm flask-test \
+            python -c "import dotenv, pyodbc; print('Required Python dependencies are installed')"
 
-      - name: Check CI environment
+      - name: Test pyodbc connection
         run: |
           docker run --rm \
             --add-host=host.docker.internal:host-gateway \
@@ -142,38 +127,62 @@ jobs:
             -e DB_USER=devops_app \
             -e DB_PASSWORD="$DB_PASSWORD" \
             flask-test \
-            python -c "import os; print('SERVER=', os.getenv('DB_SERVER')); print('DB=', os.getenv('DB_NAME')); print('USER=', os.getenv('DB_USER')); print('PASSWORD SET=', bool(os.getenv('DB_PASSWORD')))"
-
-      - name: Test pyodbc connection
-        run: |
-          docker run --rm \
-          --add-host=host.docker.internal:host-gateway \
-          -e DB_SERVER=host.docker.internal,1433 \
-          -e DB_NAME=DevOpsAI \
-          -e DB_USER=devops_app \
-          -e DB_PASSWORD="$DB_PASSWORD" \
-          flask-test \
-          python -c "import os, pyodbc; print('Connecting...'); conn=pyodbc.connect(f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={os.getenv(\"DB_SERVER\")};DATABASE={os.getenv(\"DB_NAME\")};UID={os.getenv(\"DB_USER\")};PWD={os.getenv(\"DB_PASSWORD\")};TrustServerCertificate=yes;'); print('PYODBC CONNECTION SUCCESS')"
+            python -c "import os, pyodbc; print('Connecting...'); conn=pyodbc.connect(f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={os.getenv(\"DB_SERVER\")};DATABASE={os.getenv(\"DB_NAME\")};UID={os.getenv(\"DB_USER\")};PWD={os.getenv(\"DB_PASSWORD\")};TrustServerCertificate=yes;'); print('PYODBC CONNECTION SUCCESS')"
 
       - name: Run tests
         run: |
           docker run --rm \
-          --add-host=host.docker.internal:host-gateway \
+            --add-host=host.docker.internal:host-gateway \
             -e DB_SERVER=host.docker.internal,1433 \
             -e DB_NAME=DevOpsAI \
             -e DB_USER=devops_app \
             -e DB_PASSWORD="$DB_PASSWORD" \
             flask-test \
             python -m pytest tests/test_app.py
-          
+
+      - name: Smoke test application container
+        run: |
+          docker run -d \
+            --name contact-management-ci \
+            --add-host=host.docker.internal:host-gateway \
+            -p 5001:5001 \
+            -e DB_SERVER=host.docker.internal,1433 \
+            -e DB_NAME=DevOpsAI \
+            -e DB_USER=devops_app \
+            -e DB_PASSWORD="$DB_PASSWORD" \
+            flask-test
+
+          echo "Waiting for Flask application..."
+          sleep 5
+
+          curl --fail http://localhost:5001/api/users
+
+          echo "Application smoke test passed!"
+
+          docker stop contact-management-ci
+          docker rm contact-management-ci
+
       - name: Log in to GitHub Container Registry
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login ghcr.io \
+            -u "${{ github.actor }}" \
+            --password-stdin
 
-      - name: Tag Docker image
+      - name: Tag release image
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          docker tag flask-test ghcr.io/nitha-mathew/contact-management-devops:latest
+          VERSION="${GITHUB_REF_NAME#v}"
 
-      - name: Push Docker image to GHCR
+          docker tag \
+            flask-test \
+            ghcr.io/nitha-mathew/contact-management-devops:${VERSION}
+
+      - name: Push release image to GHCR
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          docker push ghcr.io/nitha-mathew/contact-management-devops:latest
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          docker push \
+            ghcr.io/nitha-mathew/contact-management-devops:${VERSION}

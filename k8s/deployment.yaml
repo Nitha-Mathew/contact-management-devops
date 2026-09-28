@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: contact-management
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: contact-management
+
+  template:
+    metadata:
+      labels:
+        app: contact-management
+
+    spec:
+      containers:
+        - name: contact-management
+          image: ghcr.io/nitha-mathew/contact-management-devops:latest
+
+          ports:
+            - containerPort: 5001
