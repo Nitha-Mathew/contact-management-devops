@@ -23,3 +23,19 @@ spec:
 
           ports:
             - containerPort: 5001
+
+          env:
+            - name: DB_SERVER
+              value: "mssql"
+
+            - name: DB_NAME
+              value: "DevOpsAI"
+
+            - name: DB_USER
+              value: "devops_app"
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-db-secret
+                  key: DB_PASSWORD
