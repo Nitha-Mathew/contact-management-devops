@@ -198,3 +198,19 @@ jobs:
         run: |
           kubectl config current-context
           kubectl get nodes
+
+  deploy:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: self-hosted
+
+    steps:
+      - name: Deploy to Minikube
+        shell: powershell
+        run: |
+          $VERSION = $env:GITHUB_REF_NAME.Substring(1)
+
+          kubectl set image deployment/contact-management `
+            contact-management=ghcr.io/nitha-mathew/contact-management-devops:$VERSION
+
+          kubectl rollout status deployment/contact-management
