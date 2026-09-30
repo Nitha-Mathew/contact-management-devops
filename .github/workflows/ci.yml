@@ -188,16 +188,6 @@ jobs:
 
           docker push \
             ghcr.io/nitha-mathew/contact-management-devops:${VERSION}
-          
-  runner-test:
-    needs: test
-    runs-on: self-hosted
-
-    steps:
-      - name: Check Kubernetes
-        run: |
-          kubectl config current-context
-          kubectl get nodes
 
   deploy:
     needs: test
