@@ -16,6 +16,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+
+
     env:
       MSSQL_SA_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -186,3 +188,13 @@ jobs:
 
           docker push \
             ghcr.io/nitha-mathew/contact-management-devops:${VERSION}
+          
+  runner-test:
+    needs: test
+    runs-on: self-hosted
+
+    steps:
+      - name: Check Kubernetes
+        run: |
+          kubectl config current-context
+          kubectl get nodes
