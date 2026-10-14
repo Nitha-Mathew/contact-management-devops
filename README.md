@@ -1,10 +1,12 @@
 Contact Management Application – DevOps Project
 
 Project Overview
+
 The Contact Management Application is a Python Flask-based web application developed and deployed as a hands-on DevOps project. The application provides REST API endpoints for managing user/contact information
 and uses Microsoft SQL Server as its backend database.
 
  Project Objectives
+ 
 The primary objectives of this project were:
 - Develop and containerize a Flask-based REST API application.
 - Integrate the application with Microsoft SQL Server.
@@ -19,25 +21,31 @@ The primary objectives of this project were:
 - Implement automated Kubernetes deployments and rollout validation.
 
 Technologies Used
+
 •   Programming and Application Development
+
 Python 3.12
 Flask
 REST APIs
 Pyodbc
 
 •	Database
+
 Microsoft SQL Server
 
 •	Containerization
+
 Docker
 
 •	GitHub Container Registry (GHCR)
+
 CI/CD and Version Control
  GitHub
  GitHub Actions
  pytest
 
 •	Container Orchestration and Networking
+
  Kubernetes
 Minikube
 Kubernetes Deployments
@@ -49,6 +57,7 @@ PersistentVolumeClaims (PVCs)
 NGINX Ingress
 
 Application Architecture
+
 The project follows a containerized application architecture in which the Flask application and Microsoft SQL Server run as separate components.
 The Flask application exposes REST API endpoints that process incoming HTTP requests. When a request requires database access, the application connects to Microsoft SQL Server through pyodbc and ODBC Driver 18.
 Docker is used to package the application and its dependencies into a container image. GitHub Actions automates testing and image publishing. Kubernetes manages the application and database workloads, while Kubernetes Services provide internal connectivity. NGINX Ingress provides an HTTP entry point to the Flask application through a configured hostname.
