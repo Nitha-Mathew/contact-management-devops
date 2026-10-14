@@ -52,6 +52,7 @@ Application Architecture
 The project follows a containerized application architecture in which the Flask application and Microsoft SQL Server run as separate components.
 The Flask application exposes REST API endpoints that process incoming HTTP requests. When a request requires database access, the application connects to Microsoft SQL Server through pyodbc and ODBC Driver 18.
 Docker is used to package the application and its dependencies into a container image. GitHub Actions automates testing and image publishing. Kubernetes manages the application and database workloads, while Kubernetes Services provide internal connectivity. NGINX Ingress provides an HTTP entry point to the Flask application through a configured hostname.
+
 The overall workflow is:
 Developer → GitHub Repository → GitHub Actions CI → Automated Tests → Docker Image Build → GHCR → Kubernetes Deployment → NGINX Ingress → Flask REST API → Microsoft SQL Server.
 
